@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace AstralOrm\Model\Traits;
 
+use ReflectionNamedType;
+use ReflectionProperty;
+
 /**
  * Trait HasFillable
  *
  * Permet l'hydratation de masse sécurisée via une liste blanche $fillable.
  * Les champs non déclarés dans $fillable sont ignorés silencieusement.
+ *
+ * Les valeurs sont coercées vers le type déclaré de la propriété (int, float,
+ * bool, string) pour rester compatible avec les modèles typés PHP 8
+ * et les entrées formulaire / PDO (souvent des strings).
  *
  * Usage dans le modèle :
  *
@@ -20,7 +27,7 @@ namespace AstralOrm\Model\Traits;
  *   $article->fill($request->body);
  *
  *   // ou via la méthode statique du Model de base
- *   $article = Article::fill($request->body);
+ *   $article = Article::make($request->body);
  */
 trait HasFillable
 {
@@ -42,7 +49,7 @@ trait HasFillable
     {
         foreach ($data as $key => $value) {
             if ($this->isFillable($key)) {
-                $this->{$key} = $value;
+                $this->{$key} = $this->coerceForProperty($key, $value);
             }
         }
 
@@ -65,5 +72,34 @@ trait HasFillable
     public function getFillable(): array
     {
         return $this->fillable;
+    }
+
+    /**
+     * Coerce une valeur vers le type natif déclaré sur la propriété, si possible.
+     */
+    private function coerceForProperty(string $key, mixed $value): mixed
+    {
+        if ($value === null || !property_exists($this, $key)) {
+            return $value;
+        }
+
+        $type = (new ReflectionProperty($this, $key))->getType();
+
+        if (!$type instanceof ReflectionNamedType || !$type->isBuiltin()) {
+            return $value;
+        }
+
+        return match ($type->getName()) {
+            'int' => (int) $value,
+            'float' => (float) $value,
+            'string' => (string) $value,
+            'bool' => match (true) {
+                is_bool($value) => $value,
+                is_int($value), is_float($value) => $value != 0,
+                is_string($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN),
+                default => (bool) $value,
+            },
+            default => $value,
+        };
     }
 }

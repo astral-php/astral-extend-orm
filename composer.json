@@ -2,7 +2,7 @@
     "name": "astral-php/astral-extend-orm",
     "description": "Extension ORM pour Astral — Fillable, Casts, Accessors, Hidden, Relations déclaratives",
     "type": "library",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "keywords": [
         "astral",

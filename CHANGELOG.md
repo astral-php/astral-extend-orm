@@ -4,6 +4,12 @@ Toutes les modifications notables de ce projet sont documentées ici.
 
 ---
 
+## [0.1.1] — 2026-10-08
+
+### Correctif
+
+- `HasFillable::fill()` : coerce les scalaires vers le type déclaré de la propriété (`int` / `float` / `bool` / `string`) pour éviter les `TypeError` PHP 8 avec des entrées formulaire / PDO.
+
 ## [0.1.0] — 2026-10-04
 
 ### Packaging (hub 1.2.5)

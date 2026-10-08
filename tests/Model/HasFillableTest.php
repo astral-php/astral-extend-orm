@@ -31,6 +31,14 @@ final class HasFillableTest extends TestCase
         $this->assertSame(3, $article->category_id);
     }
 
+    public function test_fill_coerces_string_to_typed_int_property(): void
+    {
+        $article = new ArticleStub();
+        $article->fill(['title' => 'Typed', 'category_id' => '7']);
+
+        $this->assertSame(7, $article->category_id);
+    }
+
     public function test_fill_ignores_non_fillable_fields(): void
     {
         $article = new ArticleStub();
